@@ -13,7 +13,7 @@ int main() {
         for (int j {}; j < n; j++)
             testmap[j] = j;
         auto finish = std::chrono::high_resolution_clock::now();
-        std::cout << n << " " << 2 * sizeof(int) * n / (1024 * 1024) << " " << 
+        std::cout << i << " " << 2 * sizeof(int) * n / (1024 * 1024) << " " << 
             std::chrono::duration_cast<std::chrono::nanoseconds> (finish - start).count() << " ";
     }
     return 0;
