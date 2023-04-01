@@ -33,7 +33,7 @@ public:
 	void operator /= (const NDArray<T> arr_a);
 	NDArray<T> operator * (const NDArray<T> arr_a);
 	void operator *= (const NDArray<T> arr_a);
-	NDArray<T> matmul(const NDArray<T> arr_a);
+	NDArray<T> matmul(NDArray<T> arr_a);
 	NDArray transpose();
 	T* min(int axis);
 	T min();
@@ -198,6 +198,27 @@ NDArray<T> NDArray<T>::transpose() {
 			int inverse_idx[] = { j, i };
 			result.set_item(idx, get_item(inverse_idx));
 		}
+	return result;
+}
+
+template<class T>
+NDArray<T> NDArray<T>::matmul(NDArray<T> arr_a) {
+	int size[] = { arr_size[0], arr_a.arr_size[1] };
+	NDArray<T> result = NDArray<T>(size);
+	for (int i = 0; i < size[0]; i++) {
+		for (int j = 0; j < size[1]; j++) {
+			int idx[] = { i, j };
+			int mul_res = 0;
+			for (int k = 0; k < arr_size[1]; k++) {
+				int idx1[] = { i, k };
+				int idx2[] = { k, i };
+				std::cout << get_item(idx1) << " " << arr_a.get_item(idx2) << std::endl;
+				mul_res += get_item(idx1) * arr_a.get_item(idx2);
+			}
+			result.set_item(idx, mul_res);
+		}
+	}
+	std::cout << result;
 	return result;
 }
 
