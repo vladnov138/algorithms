@@ -18,13 +18,13 @@ private:
 	int dimension;
 public:
 	NDArray(const NDArray& arr_a);
-	NDArray(int* arr_size);
+	NDArray(int* arr_size, int arr_size_length);
 	~NDArray();
 	void fill_zero();
 	void fill_identity();
 	void fill_random();
-	T get_item(const int* index);
-	void set_item(const int* index, const T& value);
+	T get_item(const int* index, int index_size);
+	void set_item(const int* index, int index_size, const T& value);
 	NDArray<T> operator + (const NDArray& arr_a);
 	NDArray<T>& operator += (const NDArray<T> arr_a);
 	NDArray<T> operator - (const NDArray<T> arr_a);
@@ -44,10 +44,12 @@ public:
 };
 
 template<class T>
-NDArray<T>::NDArray(int* arr_size) {
+NDArray<T>::NDArray(int* arr_size, int arr_size_length) {
 	if (!std::is_same_v<T, float> && !std::is_same_v<T, int>)
 		throw TypeException();
-	int length = sizeof(arr_size) / sizeof(int);
+	int length = arr_size_length;
+	std::cout << std::endl << arr_size[0] << " " << arr_size[1];
+	std::cout << std::endl << length << std::endl;
 	dimension = length;
 	this->arr_size = new int[length];
 	size = 1;
@@ -61,11 +63,10 @@ NDArray<T>::NDArray(int* arr_size) {
 template<class T>
 NDArray<T>::NDArray(const NDArray& arr_a) {
 	size = arr_a.size;
-	int length = sizeof(arr_a.arr_size) / sizeof(int);
-	arr_size = new int[length];
-	dimension = length;
+	dimension = arr_a.dimension;
+	arr_size = new int[dimension];
 	arr = new int[size];
-	for (int i = 0; i < length; i++)
+	for (int i = 0; i < dimension; i++)
 		arr_size[i] = arr_a.arr_size[i];
 	for (int i = 0; i < size; i++)
 		arr[i] = arr_a.arr[i];
@@ -161,8 +162,8 @@ NDArray<T>& NDArray<T>::operator*=(const NDArray<T> arr_a) {
 }
 
 template<class T>
-T NDArray<T>::get_item(const int* index) {
-	int length = sizeof(index) / sizeof(int);
+T NDArray<T>::get_item(const int* index, int index_length) {
+	int length = index_length;
 	int arr_idx = 0;
 	for (int i = 0; i + 1< length; i++)
 		arr_idx += index[i] * arr_size[i + 1];
@@ -171,13 +172,36 @@ T NDArray<T>::get_item(const int* index) {
 }
 
 template<class T>
-void NDArray<T>::set_item(const int* index, const T& value) {
-	int length = sizeof(index) / sizeof(int);
+void NDArray<T>::set_item(const int* index, int index_length, const T& value) {
+	int length = index_length;
 	int arr_idx = 0;
 	for (int i = 0; i + 1< length; i++)
 		arr_idx += index[i] * arr_size[i + 1];
 	arr_idx += index[length - 1];
 	arr[arr_idx] = value;
+}
+
+template<class T>
+NDArray<T> NDArray<T>::matmul(NDArray<T> arr_a) {
+	if (dimension != 2 || arr_size[0] != arr_a.arr_size[1] || arr_size[1] != arr_a.arr_size[0])
+		throw DimensionException();
+	int size[] = { arr_size[0], arr_a.arr_size[1] };
+	NDArray<T> result = NDArray<T>(size, sizeof(size) / sizeof(size[0]));
+	for (int i = 0; i < size[0]; i++) {
+		for (int j = 0; j < size[1]; j++) {
+			int idx[] = { i, j };
+			int mul_res = 0;
+			for (int k = 0; k < arr_size[1]; k++) {
+				int idx1[] = { i, k };
+				int idx2[] = { k, i };
+				std::cout << get_item(idx1, dimension) << " " << arr_a.get_item(idx2, dimension) << std::endl;
+				mul_res += get_item(idx1, dimension) * arr_a.get_item(idx2, dimension);
+			}
+			result.set_item(idx, dimension, mul_res);
+		}
+	}
+	std::cout << result;
+	return result;
 }
 
 template<class T>
@@ -195,29 +219,6 @@ NDArray<T> NDArray<T>::transpose() {
 			int inverse_idx[] = { j, i };
 			result.set_item(idx, get_item(inverse_idx));
 		}
-	return result;
-}
-
-template<class T>
-NDArray<T> NDArray<T>::matmul(NDArray<T> arr_a) {
-	if (dimension != 2 || arr_size[0] != arr_a.arr_size[1] || arr_size[1] != arr_a.arr_size[0])
-		throw DimensionException();
-	int size[] = { arr_size[0], arr_a.arr_size[1] };
-	NDArray<T> result = NDArray<T>(size);
-	for (int i = 0; i < size[0]; i++) {
-		for (int j = 0; j < size[1]; j++) {
-			int idx[] = { i, j };
-			int mul_res = 0;
-			for (int k = 0; k < arr_size[1]; k++) {
-				int idx1[] = { i, k };
-				int idx2[] = { k, i };
-				std::cout << get_item(idx1) << " " << arr_a.get_item(idx2) << std::endl;
-				mul_res += get_item(idx1) * arr_a.get_item(idx2);
-			}
-			result.set_item(idx, mul_res);
-		}
-	}
-	std::cout << result;
 	return result;
 }
 
@@ -325,7 +326,7 @@ double* NDArray<T>::mean(int axis) {
 			int s = 0;
 			for (int j = 0; j < arr_size[0]; j++) {
 				int idx[] = { j, i };
-				s += get_item(idx);
+				s += get_item(idx, dimension);
 			}
 			mean_result[i] = (double) s / arr_size[0];
 		}
@@ -336,7 +337,7 @@ double* NDArray<T>::mean(int axis) {
 			int s = 0;
 			for (int j = 0; j < arr_size[1]; j++) {
 				int idx[] = { i, j };
-				s += get_item(idx);
+				s += get_item(idx, dimension);
 			}
 			mean_result[i] = (double) s / arr_size[1];
 		}
