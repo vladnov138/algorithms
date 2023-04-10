@@ -48,8 +48,6 @@ NDArray<T>::NDArray(int* arr_size, int arr_size_length) {
 	if (!std::is_same_v<T, float> && !std::is_same_v<T, int>)
 		throw TypeException();
 	int length = arr_size_length;
-	std::cout << std::endl << arr_size[0] << " " << arr_size[1];
-	std::cout << std::endl << length << std::endl;
 	dimension = length;
 	this->arr_size = new int[length];
 	size = 1;
@@ -163,21 +161,34 @@ NDArray<T>& NDArray<T>::operator*=(const NDArray<T> arr_a) {
 
 template<class T>
 T NDArray<T>::get_item(const int* index, int index_length) {
-	int length = index_length;
+	if (dimension != index_length)
+		throw DimensionException();
 	int arr_idx = 0;
-	for (int i = 0; i + 1< length; i++)
+	for (int i = 0; i + 1 < index_length; i++) {
+		if (index[i] >= arr_size[i])
+			throw SizeException();
 		arr_idx += index[i] * arr_size[i + 1];
-	arr_idx += index[length - 1];
+
+	}
+	if (index[index_length - 1] >= arr_size[index_length - 1])
+		throw SizeException();
+	arr_idx += index[index_length - 1];
 	return arr[arr_idx];
 }
 
 template<class T>
 void NDArray<T>::set_item(const int* index, int index_length, const T& value) {
-	int length = index_length;
+	if (dimension != index_length)
+		throw DimensionException();
 	int arr_idx = 0;
-	for (int i = 0; i + 1< length; i++)
+	for (int i = 0; i + 1 < index_length; i++) { 
+		if (index[i] >= arr_size[i])
+			throw SizeException();
 		arr_idx += index[i] * arr_size[i + 1];
-	arr_idx += index[length - 1];
+	}
+	if (index[index_length - 1] >= arr_size[index_length - 1])
+		throw SizeException();
+	arr_idx += index[index_length - 1];
 	arr[arr_idx] = value;
 }
 
@@ -194,13 +205,11 @@ NDArray<T> NDArray<T>::matmul(NDArray<T> arr_a) {
 			for (int k = 0; k < arr_size[1]; k++) {
 				int idx1[] = { i, k };
 				int idx2[] = { k, i };
-				std::cout << get_item(idx1, dimension) << " " << arr_a.get_item(idx2, dimension) << std::endl;
 				mul_res += get_item(idx1, dimension) * arr_a.get_item(idx2, dimension);
 			}
 			result.set_item(idx, dimension, mul_res);
 		}
 	}
-	std::cout << result;
 	return result;
 }
 
@@ -211,13 +220,13 @@ NDArray<T> NDArray<T>::transpose() {
 	int* new_size = new int[2];
 	new_size[1] = arr_size[0];
 	new_size[0] = arr_size[1];
-	NDArray<T> result(new_size);
+	NDArray<T> result(new_size, dimension);
 	result.fill_identity();
 	for (int i = 0; i < new_size[0]; i++)
 		for (int j = 0; j < new_size[1]; j++) {
 			int idx[] = { i, j };
 			int inverse_idx[] = { j, i };
-			result.set_item(idx, get_item(inverse_idx));
+			result.set_item(idx, dimension, get_item(inverse_idx, dimension));
 		}
 	return result;
 }

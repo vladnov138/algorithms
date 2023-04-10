@@ -15,7 +15,10 @@ int main() {
 	}
 	double* min_axis0 = new double[3];
 	min_axis0 = ndarr.mean(1);
-	for (int i = 0; i < 3; i++)
-		std::cout << min_axis0[i] << " ";
-	std::cout << std::endl << ndarr.mean();
+	// for (int i = 0; i < 3; i++)
+		// std::cout << min_axis0[i] << " ";
+	// std::cout << std::endl << ndarr.mean();
+	int idx[] = {1, 1};
+	std::cout << ndarr.get_item(idx, 2) << std::endl;
+	std::cout << ndarr.transpose().get_item(idx, 2);
 }
