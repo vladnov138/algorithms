@@ -15,6 +15,7 @@ int main() {
 	}
 	double* min_axis0 = new double[3];
 	min_axis0 = ndarr.mean(1);
+<<<<<<< HEAD:ndarray_task/Main.cpp
 	// for (int i = 0; i < 3; i++)
 		// std::cout << min_axis0[i] << " ";
 	// std::cout << std::endl << ndarr.mean();
@@ -22,3 +23,9 @@ int main() {
 	std::cout << ndarr.get_item(idx, 2) << std::endl;
 	std::cout << ndarr.transpose().get_item(idx, 2);
 }
+=======
+	for (int i = 0; i < 3; i++)
+		std::cout << min_axis0[i] << " ";
+	std::cout << std::endl << ndarr.mean();
+}
+>>>>>>> origin/main:ndarray_task/main.cpp
