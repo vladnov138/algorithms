@@ -22,16 +22,19 @@ class Widget():
         if self.parent is not None:
             bparent = self.parent.__class__.__name__.encode()
         result = struct.pack("i", len(bclassname)) + bclassname + struct.pack("i", len(bparent)) + bparent
-        data = b""
         match self.__class__.__name__:
             case 'Layout':
-                data += struct.pack("i", len(str(self.alignment))) + str(self.alignment).encode()
+                result += struct.pack("i", len(str(self.alignment))) + str(self.alignment).encode()
             case "LineEdit":
-                data += struct.pack("i", self.max_length)
+                result += struct.pack("i", self.max_length)
             case "ComboBox":
-                data += struct.pack("i", len(self.items))
+                items = [str(item) for item in self.items]
+                bstr = ';'.join(items).encode()
+                print(bstr)
+                result += struct.pack("i", len(bstr)) + bstr
             case "MainWindow":
-                data += struct.pack("i", len(self.title)) + self.title.encode()
+                result += struct.pack("i", len(self.title.encode())) + self.title.encode()
+        data = b""
         for child in self.childrens:
             bnode = child.to_binary()
             data += bnode
@@ -39,31 +42,41 @@ class Widget():
         return result
 
     @classmethod
-    def from_binary(cls, data, parent=None):
+    def from_binary(cls, data, root_parent=None):
         len_classname = struct.unpack("i", data[:4])[0]
         cur_size = 4
         classname = data[cur_size:cur_size + len_classname].decode()
         cur_size += len_classname
+
         len_parent = struct.unpack("i", data[cur_size:cur_size + 4])[0]
         cur_size += 4
         parent = None
         if len_parent > 0:
             parent = data[cur_size:cur_size + len_parent].decode()
         cur_size += len_parent
+
+        len_prop = struct.unpack("i", data[cur_size:cur_size + 4])[0]
+        cur_size += 4
+        root = None
+        match classname:
+            case 'MainWindow':
+                prop = data[cur_size:cur_size + len_prop].decode()
+                cur_size += len_prop
+                root = cls(prop)
+            case 'Layout':
+                prop = data[cur_size:cur_size + len_prop].decode()
+                cur_size += len_prop
+                root = Layout(root_parent, Alignment.VERTICAL)
+            case 'LineEdit':
+                root = LineEdit(root_parent, len_prop)
         len_children = struct.unpack("i", data[cur_size:cur_size + 4])[0]
         cur_size += 4
-        print(parent)
-        input()
-        root = cls(parent)
-        print(root)
-        input()
         data_children = data[cur_size:]
         cursor = 0
         while cursor < len_children:
-            node, node_cursor = Widget.from_binary(data_children[cursor:], parent=root)
-            root.add_children(node)
+            node, node_cursor = root.from_binary(data_children[cursor:], root_parent=root)
             cursor += node_cursor
-        return root, cur_size
+        return root, cur_size + cursor
 
     def __str__(self):
         return f"{self.__class__.__name__}{self.childrens}"
@@ -102,8 +115,8 @@ layout2 = Layout(app, Alignment.VERTICAL)
 edit1 = LineEdit(layout1, 20)
 edit2 = LineEdit(layout1, 30)
 
-# box1 = ComboBox(layout2, [1, 2, 3, 4])
-# box2 = ComboBox(layout2, ["a", "b", "c"])
+box1 = ComboBox(layout2, [1, 2, 3, 4])
+box2 = ComboBox(layout2, ["a", "b", "c"])
 
 print(app)
 
