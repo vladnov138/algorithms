@@ -30,7 +30,6 @@ class Widget():
             case "ComboBox":
                 items = [str(item) for item in self.items]
                 bstr = ';'.join(items).encode()
-                print(bstr)
                 result += struct.pack("i", len(bstr)) + bstr
             case "MainWindow":
                 result += struct.pack("i", len(self.title.encode())) + self.title.encode()
@@ -69,6 +68,10 @@ class Widget():
                 root = Layout(root_parent, Alignment.VERTICAL)
             case 'LineEdit':
                 root = LineEdit(root_parent, len_prop)
+            case 'ComboBox':
+                prop = data[cur_size:cur_size + len_prop].decode().split(';')
+                cur_size += len_prop
+                root = ComboBox(root_parent, prop)
         len_children = struct.unpack("i", data[cur_size:cur_size + 4])[0]
         cur_size += 4
         data_children = data[cur_size:]
@@ -124,5 +127,5 @@ bts = app.to_binary()
 print(bts)
 print(f"Binary data length {len(bts)}")
 
-new_app = MainWindow.from_binary(bts)
+new_app = MainWindow.from_binary(bts)[0]
 print(new_app)
