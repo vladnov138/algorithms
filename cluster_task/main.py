@@ -1,24 +1,11 @@
+import heapq
+
 import matplotlib.pyplot as plt
 import networkx as nx
 from networkx.drawing.nx_pydot import graphviz_layout
 import json
 import shapely
 import math
-
-def get_spanning_tree(graph):
-    edges, nodes = [], []
-    for node in graph.nodes:
-        nodes.append(node)
-        connected_edges = filter(lambda edge: edge not in nodes and (edge[1] not in nodes or len(nodes) <= 1),
-                                 graph.edges(node))
-        min_edge = min(connected_edges,
-                       key=lambda e: graph.get_edge_data(*e)["weight"])
-        edges.append(min_edge +
-                     (graph.get_edge_data(*min_edge)["weight"], ))
-    result = nx.Graph()
-    result.add_weighted_edges_from(edges)
-    result.add_nodes_from(nodes)
-    return result
 
 def get_sp_tree(graph):
     edges, nodes = [], []
@@ -34,6 +21,27 @@ def get_sp_tree(graph):
         nodes.append(min_edge[1])
     tree.add_nodes_from(nodes)
     tree.add_weighted_edges_from(edges)
+    return
+
+def get_span_tree_by_heapq(graph):
+    edges, nodes = [], []
+    tree = nx.Graph()
+    start_node = list(graph.nodes)[0]
+    nodes.append(start_node)
+    connected_edges = [(start_node, new_node, graph.get_edge_data(start_node, new_node)['weight'])
+                                      for new_node in graph.neighbors(start_node)]
+    heapq.heapify(connected_edges)
+    while connected_edges:
+        min_edge = heapq.heappop(connected_edges)
+        if min_edge[1] not in nodes:
+            edges.append(min_edge)
+            nodes.append(min_edge[1])
+            for node in graph.neighbors(min_edge[1]):
+                if node not in nodes:
+                    edge = (min_edge[1], node, graph.get_edge_data(min_edge[1], node)['weight'])
+                    heapq.heappush(connected_edges, edge)
+    tree.add_weighted_edges_from(edges)
+    tree.add_nodes_from(nodes)
     return tree
 
 def get_clusters(spanning_tree: nx.Graph, n_clusters: int):
@@ -126,12 +134,12 @@ for site in north_america_sites:
     flons.append(site["location"]["lon"])
     flats.append(site["location"]["lat"])
 
-edges, nodes = make_graph(north_america_sites[:10])
+edges, nodes = make_graph(north_america_sites)
 graph = nx.Graph()
 graph.add_nodes_from(nodes)
 graph.add_weighted_edges_from(edges)
 
-my_span_tree = get_sp_tree(graph)
+my_span_tree = get_span_tree_by_heapq(graph)
 span_tree = nx.minimum_spanning_tree(graph)
 print("My function: ", my_span_tree)
 print("Networkx function: ", span_tree)
