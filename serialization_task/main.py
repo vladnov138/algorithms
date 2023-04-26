@@ -1,15 +1,18 @@
 from enum import Enum
 import struct
 
+
 class Alignment(Enum):
     HORIZONTAL = 1
     VERTICAL = 2
+
 
 class Widget():
 
     def __init__(self, parent):
         self.parent = parent
         self.childrens = []
+
         if self.parent is not None:
             self.parent.add_children(self)
 
@@ -21,7 +24,7 @@ class Widget():
         result = struct.pack("i", len(bclassname)) + bclassname
         match self.__class__.__name__:
             case 'Layout':
-                result += struct.pack("i", len(str(self.alignment))) + str(self.alignment).encode()
+                result += struct.pack("i", self.alignment.value)
             case "LineEdit":
                 result += struct.pack("i", self.max_length)
             case "ComboBox":
@@ -53,10 +56,11 @@ class Widget():
             case 'MainWindow':
                 root = cls(prop)
             case 'Layout':
-                root = Layout(parent, Alignment.VERTICAL)
+                cur_size -= len_prop            # Свойство Layout и есть len_prop
+                root = Layout(parent, len_prop)
             case 'LineEdit':
-                cur_size -= len_prop # Свойство LineEdit и есть len_prop.
-                                     # Поэтому счетчик пройденной длины уменьшаем
+                cur_size -= len_prop            # Свойство LineEdit и есть len_prop.
+                                                # Поэтому счетчик пройденной длины уменьшаем
                 root = LineEdit(parent, len_prop)
             case 'ComboBox':
                 root = ComboBox(parent, prop)
