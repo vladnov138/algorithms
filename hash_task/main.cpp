@@ -40,7 +40,7 @@ int main() {
 			std::chrono::duration_cast<std::chrono::milliseconds>(time).count() << " ms" << 
 			"\tRepeat files: " << counter_files << std::endl;
 	}
-	return 1;
+	return 0;
 }
 
 void fill_map() {
