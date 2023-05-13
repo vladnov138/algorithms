@@ -9,7 +9,6 @@
 #include <iomanip>
 #include <map>
 #include <algorithm>
-#include <unordered_set>
 
 int hash_by_crc(const std::string &str);
 int hash_by_pjw(const std::string &str);
