@@ -9,6 +9,7 @@
 #include <iomanip>
 #include <map>
 #include <algorithm>
+#include <unordered_set>
 
 int hash_by_crc(const std::string &str);
 int hash_by_pjw(const std::string &str);
@@ -27,6 +28,7 @@ int main() {
 	const std::string path = "out";
 	
 	std::vector<std::string> filenames;
+	filenames.reserve(600);
 	get_filenames(path, filenames);
 	fill_map();
 
