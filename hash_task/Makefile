@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = -std=c++20 -Wall -pedantic
+CFLAGS = -std=c++17 -Wall -pedantic
 SOURCE = main.cpp
 
 ifeq ($(OS), Windows_NT)
